@@ -6,7 +6,7 @@ const Payroll = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
-  const [generateType, setGenerateType] = useState('single'); // 'single' or 'batch'
+  const [generateType, setGenerateType] = useState('single');
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [periodStart, setPeriodStart] = useState('');
   const [periodEnd, setPeriodEnd] = useState('');
@@ -34,6 +34,10 @@ const Payroll = () => {
   const handleGenerate = async () => {
     try {
       if (generateType === 'single') {
+        if (!selectedEmployee) {
+          alert('Selecciona un empleado');
+          return;
+        }
         await payrollService.generate({
           employee_id: parseInt(selectedEmployee),
           period_start: periodStart,
@@ -47,6 +51,9 @@ const Payroll = () => {
       }
       alert('Nómina generada exitosamente');
       setShowGenerateModal(false);
+      setSelectedEmployee('');
+      setPeriodStart('');
+      setPeriodEnd('');
       loadData();
     } catch (error) {
       alert('Error al generar nómina: ' + (error.response?.data?.error || error.message));
@@ -56,11 +63,29 @@ const Payroll = () => {
   const handleApprove = async (id) => {
     if (window.confirm('¿Aprobar esta nómina?')) {
       try {
-        await payrollService.approve(id, { payment_date: new Date().toISOString().split('T')[0] });
-        alert('Nómina aprobada');
+        await payrollService.approve(id, { 
+          payment_date: new Date().toISOString().split('T')[0] 
+        });
+        alert('Nómina aprobada exitosamente');
         loadData();
       } catch (error) {
-        alert('Error al aprobar');
+        console.error('Error al aprobar:', error);
+        alert('Error al aprobar nómina: ' + (error.response?.data?.error || error.message));
+      }
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Eliminar esta nómina? Esta acción no se puede deshacer.')) {
+      try {
+        // Necesitamos agregar el endpoint delete en el backend
+        // Por ahora simularemos con un mensaje
+        await payrollService.delete(id);
+        alert('Nómina eliminada exitosamente');
+        loadData();
+      } catch (error) {
+        console.error('Error al eliminar:', error);
+        alert('Error al eliminar nómina');
       }
     }
   };
@@ -182,13 +207,29 @@ const Payroll = () => {
                       {payroll.status === 'approved' ? '✓ Aprobado' : '⏳ Pendiente'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm">
+                  <td className="px-6 py-4 text-right text-sm space-x-2">
                     {payroll.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => handleApprove(payroll.id)}
+                          className="text-green-600 hover:text-green-900 font-medium"
+                        >
+                          Aprobar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(payroll.id)}
+                          className="text-red-600 hover:text-red-900 font-medium"
+                        >
+                          Eliminar
+                        </button>
+                      </>
+                    )}
+                    {payroll.status === 'approved' && (
                       <button
-                        onClick={() => handleApprove(payroll.id)}
-                        className="text-green-600 hover:text-green-900 font-medium"
+                        onClick={() => handleDelete(payroll.id)}
+                        className="text-red-600 hover:text-red-900 font-medium"
                       >
-                        Aprobar
+                        Eliminar
                       </button>
                     )}
                   </td>
@@ -211,7 +252,7 @@ const Payroll = () => {
                 <select
                   value={generateType}
                   onChange={(e) => setGenerateType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="single">Individual</option>
                   <option value="batch">Todos los empleados</option>
@@ -224,7 +265,7 @@ const Payroll = () => {
                   <select
                     value={selectedEmployee}
                     onChange={(e) => setSelectedEmployee(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="">Seleccionar...</option>
@@ -243,7 +284,7 @@ const Payroll = () => {
                   type="date"
                   value={periodStart}
                   onChange={(e) => setPeriodStart(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -254,7 +295,7 @@ const Payroll = () => {
                   type="date"
                   value={periodEnd}
                   onChange={(e) => setPeriodEnd(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -262,14 +303,20 @@ const Payroll = () => {
 
             <div className="flex justify-end space-x-3 mt-6">
               <button
-                onClick={() => setShowGenerateModal(false)}
+                onClick={() => {
+                  setShowGenerateModal(false);
+                  setSelectedEmployee('');
+                  setPeriodStart('');
+                  setPeriodEnd('');
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleGenerate}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={!periodStart || !periodEnd || (generateType === 'single' && !selectedEmployee)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Generar
               </button>

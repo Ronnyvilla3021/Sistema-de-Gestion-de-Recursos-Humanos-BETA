@@ -60,6 +60,7 @@ export const payrollService = {
   getAll: (params) => api.get('/payroll', { params }),
   getByEmployee: (employee_id) => api.get(`/payroll/employee/${employee_id}`),
   approve: (id, data) => api.put(`/payroll/${id}/approve`, data),
+  delete: (id) => api.delete(`/payroll/${id}`),  // ← AGREGAR ESTA LÍNEA
   getSettings: () => api.get('/payroll/settings'),
   updateSettings: (data) => api.put('/payroll/settings', data)
 };

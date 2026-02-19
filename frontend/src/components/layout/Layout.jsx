@@ -108,9 +108,9 @@ const Layout = ({ children }) => {
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-xl min-h-[calc(100vh-73px)] border-r border-gray-200">
-          <nav className="p-4 space-y-2">
+        {/* Sidebar - SIN FOOTER ABSOLUTO */}
+        <aside className="w-64 bg-white shadow-xl min-h-[calc(100vh-73px)] border-r border-gray-200 flex flex-col">
+          <nav className="p-4 space-y-2 flex-1">
             {menuItems.map((item) => (
               <Link
                 key={item.path}
@@ -138,7 +138,8 @@ const Layout = ({ children }) => {
             ))}
           </nav>
 
-          <div className="absolute bottom-4 left-4 right-4">
+          {/* Footer del usuario - NORMAL, NO ABSOLUTO */}
+          <div className="p-4 border-t border-gray-200">
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-100">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">

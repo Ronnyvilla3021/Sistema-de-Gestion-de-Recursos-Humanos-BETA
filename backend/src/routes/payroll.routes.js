@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const {
@@ -8,7 +7,8 @@ const {
   getPayrollByEmployee,
   approvePayroll,
   getPayrollSettings,
-  updatePayrollSettings
+  updatePayrollSettings,
+  deletePayroll  // ← AGREGAR
 } = require('../controllers/payroll.controller');
 const { authMiddleware, roleMiddleware } = require('../middlewares/auth.middleware');
 
@@ -21,5 +21,6 @@ router.post('/generate-batch', roleMiddleware(['admin', 'hr']), generateBatchPay
 router.get('/', roleMiddleware(['admin', 'hr']), getAllPayrolls);
 router.get('/employee/:employee_id', getPayrollByEmployee);
 router.put('/:id/approve', roleMiddleware(['admin', 'hr']), approvePayroll);
+router.delete('/:id', roleMiddleware(['admin', 'hr']), deletePayroll);  // ← AGREGAR ESTA LÍNEA
 
 module.exports = router;

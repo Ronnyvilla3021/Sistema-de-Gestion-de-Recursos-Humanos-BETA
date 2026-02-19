@@ -7,7 +7,7 @@ const Leave = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [view, setView] = useState('requests'); // 'requests' or 'balances'
+  const [view, setView] = useState('requests');
   const [formData, setFormData] = useState({
     employee_id: '',
     leave_type: 'vacation',
@@ -41,24 +41,47 @@ const Leave = () => {
     }
   };
 
+  const calculateBusinessDays = (start, end) => {
+    let count = 0;
+    const current = new Date(start);
+    const endDate = new Date(end);
+
+    while (current <= endDate) {
+      const dayOfWeek = current.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // No sábado ni domingo
+        count++;
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    return count;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.employee_id || !formData.start_date || !formData.end_date) {
+      alert('Por favor completa todos los campos obligatorios');
+      return;
+    }
+
     try {
-      // Calcular días solicitados
-      const start = new Date(formData.start_date);
-      const end = new Date(formData.end_date);
-      const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      const days = calculateBusinessDays(formData.start_date, formData.end_date);
 
       await leaveService.create({
-        ...formData,
         employee_id: parseInt(formData.employee_id),
-        days_requested: days
+        leave_type: formData.leave_type,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        days_requested: days,
+        reason: formData.reason
       });
+
       alert('Solicitud creada exitosamente');
       setShowModal(false);
-      loadData();
       setFormData({ employee_id: '', leave_type: 'vacation', start_date: '', end_date: '', reason: '' });
+      loadData();
     } catch (error) {
+      console.error('Error creating leave:', error);
       alert('Error: ' + (error.response?.data?.error || error.message));
     }
   };
@@ -66,7 +89,7 @@ const Leave = () => {
   const handleReview = async (id, status) => {
     const comments = prompt(`¿Comentarios para ${status === 'approved' ? 'aprobar' : 'rechazar'}?`);
     try {
-      await leaveService.review(id, { status, review_comments: comments });
+      await leaveService.review(id, { status, review_comments: comments || '' });
       alert(`Solicitud ${status === 'approved' ? 'aprobada' : 'rechazada'}`);
       loadData();
     } catch (error) {
@@ -302,32 +325,32 @@ const Leave = () => {
         </div>
       )}
 
-      {/* Modal Nueva Solicitud */}
+      {/* Modal Nueva Solicitud - CORREGIDO */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Nueva Solicitud</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Empleado</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Empleado *</label>
                 <select
                   value={formData.employee_id}
                   onChange={(e) => setFormData({...formData, employee_id: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 >
-                  <option value="">Seleccionar...</option>
+                  <option value="">Seleccionar empleado...</option>
                   {employees.map(emp => (
                     <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Permiso *</label>
                 <select
                   value={formData.leave_type}
                   onChange={(e) => setFormData({...formData, leave_type: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="vacation">Vacaciones</option>
@@ -337,22 +360,22 @@ const Leave = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio *</label>
                 <input
                   type="date"
                   value={formData.start_date}
                   onChange={(e) => setFormData({...formData, start_date: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha Fin *</label>
                 <input
                   type="date"
                   value={formData.end_date}
                   onChange={(e) => setFormData({...formData, end_date: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -361,14 +384,18 @@ const Leave = () => {
                 <textarea
                   value={formData.reason}
                   onChange={(e) => setFormData({...formData, reason: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   rows="3"
+                  placeholder="Opcional"
                 />
               </div>
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end space-x-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    setFormData({ employee_id: '', leave_type: 'vacation', start_date: '', end_date: '', reason: '' });
+                  }}
                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                 >
                   Cancelar
@@ -377,7 +404,7 @@ const Leave = () => {
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  Crear
+                  Crear Solicitud
                 </button>
               </div>
             </form>

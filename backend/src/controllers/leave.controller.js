@@ -1,17 +1,28 @@
 const pool = require('../config/database');
 
+// Función JavaScript para calcular días hábiles
+const calculateBusinessDays = (startDate, endDate) => {
+  let count = 0;
+  const current = new Date(startDate);
+  const end = new Date(endDate);
+
+  while (current <= end) {
+    const dayOfWeek = current.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // No sábado ni domingo
+      count++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
+};
+
 // Crear solicitud de permiso
 const createLeaveRequest = async (req, res) => {
   const { employee_id, leave_type, start_date, end_date, reason } = req.body;
 
   try {
-    // Calcular días solicitados (solo días hábiles)
-    const daysRequested = await pool.query(
-      'SELECT calculate_business_days($1::DATE, $2::DATE) as days',
-      [start_date, end_date]
-    );
-
-    const days = daysRequested.rows[0].days;
+    // Calcular días solicitados usando JavaScript (no SQL)
+    const days = calculateBusinessDays(start_date, end_date);
 
     // Si es vacación, verificar balance disponible
     if (leave_type === 'vacation') {

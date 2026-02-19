@@ -216,7 +216,7 @@ const getPayrollByEmployee = async (req, res) => {
   }
 };
 
-// Aprobar nómina
+// Aprobar nómina - SIN USAR updated_at
 const approvePayroll = async (req, res) => {
   const { id } = req.params;
   const { payment_date } = req.body;
@@ -224,7 +224,7 @@ const approvePayroll = async (req, res) => {
   try {
     const result = await pool.query(
       `UPDATE payroll 
-       SET status = 'approved', payment_date = $1, updated_at = CURRENT_TIMESTAMP
+       SET status = 'approved', payment_date = $1
        WHERE id = $2
        RETURNING *`,
       [payment_date || new Date(), id]
@@ -244,6 +244,24 @@ const approvePayroll = async (req, res) => {
   }
 };
 
+// Eliminar nómina
+const deletePayroll = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM payroll WHERE id = $1 RETURNING *', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Nómina no encontrada' });
+    }
+
+    res.json({ message: 'Nómina eliminada exitosamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al eliminar nómina' });
+  }
+};
+
 // Obtener configuración de nómina
 const getPayrollSettings = async (req, res) => {
   try {
@@ -255,7 +273,7 @@ const getPayrollSettings = async (req, res) => {
   }
 };
 
-// Actualizar configuración de nómina
+// Actualizar configuración de nómina - SIN USAR updated_at
 const updatePayrollSettings = async (req, res) => {
   const { tax_percentage, social_security_percentage, overtime_multiplier } = req.body;
 
@@ -264,8 +282,7 @@ const updatePayrollSettings = async (req, res) => {
       `UPDATE payroll_settings 
        SET tax_percentage = $1, 
            social_security_percentage = $2, 
-           overtime_multiplier = $3,
-           updated_at = CURRENT_TIMESTAMP
+           overtime_multiplier = $3
        WHERE id = 1
        RETURNING *`,
       [tax_percentage, social_security_percentage, overtime_multiplier]
@@ -287,6 +304,7 @@ module.exports = {
   getAllPayrolls,
   getPayrollByEmployee,
   approvePayroll,
+  deletePayroll,
   getPayrollSettings,
   updatePayrollSettings
 };
