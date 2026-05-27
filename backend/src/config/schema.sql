@@ -81,6 +81,8 @@ INSERT INTO departments (name, description) VALUES
   ('Administración', 'Gestión administrativa')
 ON CONFLICT DO NOTHING;
 
+DELETE FROM users WHERE email = 'admin@hr.com';
+
 -- Usuario admin por defecto (password: admin123)
 -- La contraseña está hasheada con bcrypt
 INSERT INTO users (email, password, role_id) 
