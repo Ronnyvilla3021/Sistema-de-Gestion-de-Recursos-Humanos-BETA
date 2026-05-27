@@ -84,5 +84,5 @@ ON CONFLICT DO NOTHING;
 -- Usuario admin por defecto (password: admin123)
 -- La contraseña está hasheada con bcrypt
 INSERT INTO users (email, password, role_id) 
-VALUES ('admin@hr.com', '$2a$10$xQZ0Z1Z1Z1Z1Z1Z1Z1Z1Z.Z1Z1Z1Z1Z1Z1Z1Z1Z1Z1Z1Z1Z1Z1', 1)
+VALUES ('admin@hr.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1)
 ON CONFLICT (email) DO NOTHING;
