@@ -83,8 +83,6 @@ ON CONFLICT DO NOTHING;
 
 DELETE FROM users WHERE email = 'admin@hr.com';
 
--- Usuario admin por defecto (password: admin123)
--- La contraseña está hasheada con bcrypt
 INSERT INTO users (email, password, role_id) 
-VALUES ('admin@hr.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1)
+VALUES ('admin@hr.com', '$2b$10$XcEjlF17kZYdOJgmTuuPE.2EcnDl.13N498i2lgluVaH86SIF/pYe', 1)
 ON CONFLICT (email) DO NOTHING;
